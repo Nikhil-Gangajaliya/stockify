@@ -4,18 +4,15 @@ import bcrypt from "bcryptjs";
 
 const productSchema = new Schema(
     {
-        store: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Store",
-            required: true
-        },
-
         name: {
             type: String,
             required: true,
             trim: true
         },
-
+        description: {
+            type: String,
+            trim: true
+        },
         price: {
             type: Number,
             required: true

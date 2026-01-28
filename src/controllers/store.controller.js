@@ -5,7 +5,8 @@ import { Store } from "../models/store.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 
 const createStore = asyncHandler(async (req, res) => {
-  const { storeName, address, phone, ownerId } = req.body;
+  const { ownerId } = req.params; // 👈 from URL
+  const { storeName, address, phone } = req.body;
 
   if (!storeName || storeName.trim() === "") {
     throw new ApiError(400, "Store name is required");
@@ -15,7 +16,7 @@ const createStore = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Store owner (userId) is required");
   }
 
-  // Verify owner user exists
+  // Verify owner exists
   const ownerUser = await User.findById(ownerId);
   if (!ownerUser) {
     throw new ApiError(404, "Owner user not found");
@@ -23,7 +24,7 @@ const createStore = asyncHandler(async (req, res) => {
 
   const store = await Store.create({
     storeName: storeName.trim(),
-    owner: ownerId, 
+    owner: ownerId,
     address: address?.trim(),
     phone: phone?.trim(),
   });
@@ -31,7 +32,7 @@ const createStore = asyncHandler(async (req, res) => {
   return res.status(201).json(
     new ApiResponse(201, store, "Store created successfully")
   );
-}); 
+});
 
 const getMyStore = asyncHandler(async (req, res) => {
     const ownerId = req.user._id;

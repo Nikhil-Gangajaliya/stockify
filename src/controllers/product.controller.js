@@ -1,34 +1,23 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { Product } from "../models/product.model.js";
-import { Store } from "../models/store.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 
 const createProduct = asyncHandler(async (req, res) => {
-  const { name, description, price, storeId } = req.body;
+  const { name, description, price } = req.body;
 
   if (!name || name.trim() === "") {
     throw new ApiError(400, "Product name is required");
   }
 
   if (!price || price <= 0) {
-    throw new ApiError(400, "Product price is required and must be a positive number");
-  }
-
-  if (!storeId) {
-    throw new ApiError(400, "Store ID is required");
-  }
-
-  const store = await Store.findById(storeId);
-  if (!store) {
-    throw new ApiError(404, "Store not found");
+    throw new ApiError(400, "Product price must be a positive number");
   }
 
   const product = await Product.create({
     name: name.trim(),
     description: description?.trim(),
-    price: parseFloat(price),
-    store: storeId,
+    price: Number(price),
   });
 
   return res.status(201).json(
@@ -45,13 +34,20 @@ const updateProduct = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Product not found");
   }
 
+  const updateData = {};
+
+  if (name) updateData.name = name.trim();
+  if (description) updateData.description = description.trim();
+  if (price !== undefined) {
+    if (price <= 0) {
+      throw new ApiError(400, "Price must be positive");
+    }
+    updateData.price = Number(price);
+  }
+
   const updatedProduct = await Product.findByIdAndUpdate(
     productId,
-    {
-      name: name?.trim(),
-      description: description?.trim(),
-      price: parseFloat(price),
-    },
+    updateData,
     { new: true }
   );
 
@@ -75,33 +71,20 @@ const deleteProduct = asyncHandler(async (req, res) => {
   );
 });
 
-const getProductById = asyncHandler(async (req, res) => {
-  const { productId } = req.params;
-
-  const product = await Product.findById(productId);
-  if (!product) {
-    throw new ApiError(404, "Product not found");
-  }
-
-  return res.status(200).json(
-    new ApiResponse(200, product, "Product fetched successfully")
-  );
-});
-
-const getProductsByStore = asyncHandler(async (req, res) => {
-  const { storeId } = req.params;
-
-  const products = await Product.find({ store: storeId });
+const getAllProducts = asyncHandler(async (req, res) => {
+  const products = await Product.find();
 
   return res.status(200).json(
     new ApiResponse(200, products, "Products fetched successfully")
   );
 });
 
+
+
+
 export { 
     createProduct,
     updateProduct,
     deleteProduct,
-    getProductById,
-    getProductsByStore
+    getAllProducts
 };
