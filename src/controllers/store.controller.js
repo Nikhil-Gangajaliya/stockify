@@ -89,21 +89,6 @@ const updateStoreByAdmin = asyncHandler(async (req, res) => {
   );
 });
 
-const deleteStore = asyncHandler(async (req, res) => {
-  const { storeId } = req.params;
-
-  const store = await Store.findById(storeId);
-  if (!store) {
-    throw new ApiError(404, "Store not found");
-  }
-
-  await Store.findByIdAndDelete(storeId);
-
-  return res.status(200).json(
-    new ApiResponse(200, null, "Store deleted successfully")
-  );
-});
-
 const getAllStores = asyncHandler(async (req, res) => {
     const stores = await Store.find();
 
@@ -121,6 +106,5 @@ export {
     getMyStore,
     updateMyStore,
     updateStoreByAdmin,
-    deleteStore,
     getAllStores
 };
