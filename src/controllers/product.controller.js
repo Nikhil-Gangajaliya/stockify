@@ -5,7 +5,6 @@ import { Product } from "../models/product.model.js";
 import { Store } from "../models/store.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
-import e from "express";
 
 const createProduct = asyncHandler(async (req, res) => {
   const { name, description, price, storeId } = req.body;
