@@ -58,28 +58,16 @@ const createOrder = asyncHandler(async (req, res) => {
   );
 });
 
-const getOrderById = asyncHandler(async (req, res) => {
-  const { orderId } = req.params;
-
-  const order = await Order.findById(orderId)
+const getAllOrders = asyncHandler(async (req, res) => {
+  const orders = await Order.find()
     .populate("user", "name email")
     .populate("items.product", "name price");
 
-  if (!order) {
-    throw new ApiError(404, "Order not found");
-  }
-
-  const isAdmin = req.user.role === "admin";
-  const isOwner = order.user.toString() === req.user._id.toString();
-
-  if (!isAdmin && !isOwner) {
-    throw new ApiError(403, "You are not allowed to view this order");
-  }
-
   return res.status(200).json(
-    new ApiResponse(200, order, "Order fetched successfully")
+    new ApiResponse(200, orders, "All orders fetched successfully")
   );
 });
+
 
 const getOrdersByStore = asyncHandler(async (req, res) => {
   const { storeId } = req.params;
@@ -139,7 +127,7 @@ const cancelOrder = asyncHandler(async (req, res) => {
 
 export {
     createOrder,
-    getOrderById,
+    getAllOrders,
     getOrdersByStore,
     getMyOrders,
     cancelOrder

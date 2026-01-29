@@ -1,10 +1,8 @@
 import mongoose, { Schema } from "mongoose";
-import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
 
 const invoiceSchema = new Schema(
-    {
-        order: {
+  {
+    order: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Order",
       required: true,
@@ -19,22 +17,11 @@ const invoiceSchema = new Schema(
     amount: {
       type: Number,
       required: true,
-    },
-
-    paymentMode: {
-      type: String,
-      enum: ["cash", "upi", "card"],
-      required: true,
-    },
-
-    paidAt: {
-      type: Date,
-      default: Date.now,
     }
-    },
-    {
-        timestamps: true
-    }
+  },
+  {
+    timestamps: true
+  }
 );
 
 export const Invoice = mongoose.model("Invoice", invoiceSchema);

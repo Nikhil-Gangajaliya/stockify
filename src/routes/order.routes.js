@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { 
     createOrder,
-    getOrderById,
+    getAllOrders,
     getOrdersByStore,
     getMyOrders,
     cancelOrder
@@ -18,7 +18,7 @@ import { authorizeRoles } from "../middlewares/role.middleware.js";
 const router = Router()
 
 router.route("/create-order").post(verifyJWT, authorizeRoles("user"), createOrder);
-router.route("/all-orders/:orderId").get(verifyJWT, authorizeRoles("admin"), getOrderById);
+router.route("/all-orders").get(verifyJWT, authorizeRoles("admin"), getAllOrders);
 router.route("/store-orders/:storeId").get(verifyJWT, authorizeRoles("admin"), getOrdersByStore);
 router.route("/my-orders").get(verifyJWT, authorizeRoles("user"), getMyOrders);
 router.route("/cancel-order/:orderId").post(verifyJWT, authorizeRoles("user"), cancelOrder);
