@@ -1,6 +1,4 @@
 import mongoose, { Mongoose, Schema } from "mongoose";
-import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
 
 const orderSchema = new Schema(
     {
@@ -33,7 +31,7 @@ const orderSchema = new Schema(
 
         status: {
             type: String,
-            enum: ["pending", "completed", "cancelled"],
+            enum: ["pending", "approved", "rejected", "cancelled", "shipped", "delivered"],
             default: "pending"
         }
     },

@@ -86,7 +86,6 @@ const adjustStock = asyncHandler(async (req, res) => {
   throw new ApiError(400, "Invalid action. Use 'add' or 'reduce'");
 });
 
-
 const getLowStockProducts = asyncHandler(async (req, res) => {
   const lowStockThreshold = 10;
 
