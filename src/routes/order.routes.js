@@ -10,7 +10,8 @@ import {
     approveOrder,
     rejectOrder,
     getPendingOrders,
-    adminCancelOrder
+    adminCancelOrder,
+    deliverOrder
 } from "../controllers/adminOrder.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { authorizeRoles } from "../middlewares/role.middleware.js";
@@ -27,6 +28,7 @@ router.route("/admin/pending-orders").get(verifyJWT, authorizeRoles("admin"), ge
 router.route("/admin/approve-order/:orderId").post(verifyJWT, authorizeRoles("admin"), approveOrder);
 router.route("/admin/reject-order/:orderId").post(verifyJWT, authorizeRoles("admin"), rejectOrder);
 router.route("/admin/cancel-order/:orderId").post(verifyJWT, authorizeRoles("admin"), adminCancelOrder);
+router.route("/admin/deliver-order/:orderId").post(verifyJWT, authorizeRoles("admin"), deliverOrder);
 
 
 export default router;

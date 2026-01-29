@@ -63,6 +63,31 @@ const rejectOrder = asyncHandler(async (req, res) => {
     );
 });
 
+const deliverOrder = asyncHandler(async (req, res) => {
+  const { orderId } = req.params;
+
+  const order = await Order.findById(orderId);
+  if (!order) {
+    throw new ApiError(404, "Order not found");
+  }
+
+  // only admin can mark delivered (route-level protection)
+  if (order.status !== "approved") {
+    throw new ApiError(
+      400,
+      "Only approved orders can be marked as delivered"
+    );
+  }
+
+  order.status = "delivered";
+  order.deliveredAt = new Date(); // optional but recommended
+  await order.save();
+
+  return res.status(200).json(
+    new ApiResponse(200, order, "Order marked as delivered")
+  );
+});
+
 const adminCancelOrder = asyncHandler(async (req, res) => {
   const { orderId } = req.params;
 
@@ -95,5 +120,6 @@ export {
     getPendingOrders,
     approveOrder,
     rejectOrder,
+    deliverOrder,
     adminCancelOrder
 };
