@@ -1,106 +1,62 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
-import { Product } from "../models/product.model.js";
-import { Store } from "../models/store.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import { StoreInventory } from "../models/storeInventory.model.js";
+import { Store } from "../models/store.model.js";
 
-const addStock = asyncHandler(async (req, res) => {
-  const { productId } = req.params;
-  const { quantity } = req.body;
 
-  if (!quantity || quantity <= 0) {
-    throw new ApiError(400, "Quantity is required and must be a positive number");
+const getMyInventory = asyncHandler(async (req, res) => {
+  const store = await Store.findOne({ owner: req.user._id });
+
+  if (!store) {
+    throw new ApiError(404, "Store not found for this user");
   }
 
-  const product = await Product.findById(productId);
-  if (!product) {
-    throw new ApiError(404, "Product not found");
-  }
-
-  const updatedProduct = await Product.findByIdAndUpdate(
-    productId,
-    { $inc: { stock: quantity } },
-    { new: true }
-  );
+  const inventory = await StoreInventory.find({
+    store: store._id,
+  }).populate("product", "name price");
 
   return res.status(200).json(
-    new ApiResponse(200, updatedProduct, "Stock added successfully")
+    new ApiResponse(200, inventory, "Store inventory fetched successfully")
   );
 });
 
-const reduceStock = asyncHandler(async (productId, quantity) => {
-  const updatedProduct = await Product.findOneAndUpdate(
-    {
-      _id: productId,
-      stock: { $gte: quantity }, // ensures enough stock
-    },
-    {
-      $inc: { stock: -quantity },
-    },
-    { new: true }
-  );
-
-  if (!updatedProduct) {
-    throw new ApiError(400, "Insufficient stock or product not found");
-  }
-
-  return updatedProduct;
-});
-
-const adjustStock = asyncHandler(async (req, res) => {
+const reduceMyStock = asyncHandler(async (req, res) => {
   const { productId } = req.params;
-  let { quantity, action } = req.body;
+  const { quantity } = req.body;
 
   if (!quantity || quantity <= 0) {
     throw new ApiError(400, "Quantity must be greater than 0");
   }
 
-  action = action?.toLowerCase();
-
-  let updatedProduct;
-
-  if (action === "add") {
-    updatedProduct = await Product.findByIdAndUpdate(
-      productId,
-      { $inc: { stock: quantity } },
-      { new: true }
-    );
-
-    if (!updatedProduct) {
-      throw new ApiError(404, "Product not found");
-    }
-
-    return res.status(200).json(
-      new ApiResponse(200, updatedProduct, "Stock added successfully")
-    );
+  const store = await Store.findOne({ owner: req.user._id });
+  if (!store) {
+    throw new ApiError(404, "Store not found");
   }
 
-  if (action === "reduce") {
-    updatedProduct = await reduceStock(productId, quantity);
-
-    return res.status(200).json(
-      new ApiResponse(200, updatedProduct, "Stock reduced successfully")
-    );
-  }
-
-  throw new ApiError(400, "Invalid action. Use 'add' or 'reduce'");
-});
-
-const getLowStockProducts = asyncHandler(async (req, res) => {
-  const lowStockThreshold = 10;
-
-  const lowStockProducts = await Product.find({
-    stock: { $lt: lowStockThreshold }
+  const inventory = await StoreInventory.findOne({
+    store: store._id,
+    product: productId
   });
 
+  if (!inventory) {
+    throw new ApiError(404, "Product not found in store inventory");
+  }
+
+  if (inventory.stock < quantity) {
+    throw new ApiError(400, "Insufficient stock");
+  }
+
+  inventory.stock -= quantity;
+  await inventory.save();
+
   return res.status(200).json(
-    new ApiResponse(200, lowStockProducts, "Low stock products retrieved successfully")
+    new ApiResponse(200, inventory, "Stock reduced successfully")
   );
 });
 
+
 export {
-     addStock,
-     reduceStock,
-     adjustStock,
-     getLowStockProducts
+  getMyInventory,
+  reduceMyStock
 };

@@ -5,6 +5,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { Order } from "../models/order.model.js";
+import { StoreInventory } from "../models/storeInventory.model.js";
 
 const getPendingOrders = asyncHandler(async (req, res) => {
     const orders = await Order.find({ status: "pending" })
@@ -67,26 +68,36 @@ const deliverOrder = asyncHandler(async (req, res) => {
   const { orderId } = req.params;
 
   const order = await Order.findById(orderId);
-  if (!order) {
-    throw new ApiError(404, "Order not found");
+  if (!order) throw new ApiError(404, "Order not found");
+
+  if (order.status !== "approved") {
+    throw new ApiError(400, "Only approved orders can be delivered");
   }
 
-  // only admin can mark delivered (route-level protection)
-  if (order.status !== "approved") {
-    throw new ApiError(
-      400,
-      "Only approved orders can be marked as delivered"
+  for (const item of order.items) {
+    await StoreInventory.findOneAndUpdate(
+      {
+        store: order.store,
+        product: item.product,
+      },
+      {
+        $inc: { stock: item.quantity },
+      },
+      {
+        upsert: true,
+        new: true,
+      }
     );
   }
 
   order.status = "delivered";
-  order.deliveredAt = new Date(); // optional but recommended
   await order.save();
 
   return res.status(200).json(
-    new ApiResponse(200, order, "Order marked as delivered")
+    new ApiResponse(200, order, "Order delivered & inventory updated")
   );
 });
+
 
 const adminCancelOrder = asyncHandler(async (req, res) => {
   const { orderId } = req.params;
