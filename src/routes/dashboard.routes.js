@@ -3,11 +3,13 @@ import {
   getGlobalStats,
   getStoreStats,
   getSalesSummary,
-  getTopProducts,
+  getTopProducts
+} from "../controllers/dashboard.controller.js";
+import {
   getUserDashboardStats,
   getUserRecentOrders,
   getUserOrderStatusSummary
-} from "../controllers/dashboard.controller.js";
+} from "../controllers/userDashboard.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { authorizeRoles } from "../middlewares/role.middleware.js";
 

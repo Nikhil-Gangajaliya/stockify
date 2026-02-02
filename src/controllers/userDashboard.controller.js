@@ -60,8 +60,9 @@ const getUserRecentOrders = asyncHandler(async (req, res) => {
     const orders = await Order.find({ user: userId })
         .sort({ createdAt: -1 })
         .limit(5)
-        .select("status totalAmount createdAt")
-        .populate("store", "storeName");
+        .select("items status totalAmount createdAt")
+        .populate("store", "storeName")
+        .populate("items.product", "name price");
 
     return res.status(200).json(
         new ApiResponse(200, orders, "Recent orders fetched")

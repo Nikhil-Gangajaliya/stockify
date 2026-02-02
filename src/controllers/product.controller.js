@@ -4,7 +4,7 @@ import { Product } from "../models/product.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 
 const createProduct = asyncHandler(async (req, res) => {
-  const { name, description, price } = req.body;
+  const { name, description, price, stock } = req.body;
 
   if (!name || name.trim() === "") {
     throw new ApiError(400, "Product name is required");
@@ -14,10 +14,15 @@ const createProduct = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Product price must be a positive number");
   }
 
+  if (!stock || stock <= 0) {
+    throw new ApiError(400, "Quantity must be a positive number");
+  }
+
   const product = await Product.create({
     name: name.trim(),
     description: description?.trim(),
     price: Number(price),
+    stock: Number(stock)
   });
 
   return res.status(201).json(
