@@ -4,57 +4,35 @@ import { User } from "../models/user.model.js";
 import { Store } from "../models/store.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 
-const createStore = asyncHandler(async (req, res) => {
-  const { ownerId } = req.params; // 👈 from URL
-  const { storeName, address, phone } = req.body;
+const getMyStores = asyncHandler(async (req, res) => {
+  const ownerId = req.user._id;
+  const { status } = req.query;
 
-  if (!storeName || storeName.trim() === "") {
-    throw new ApiError(400, "Store name is required");
+  const filter = { owner: ownerId };
+
+  // if status is provided, filter by it
+  if (status) {
+    filter.status = status; // approved | pending | rejected
   }
 
-  if (!ownerId) {
-    throw new ApiError(400, "Store owner (userId) is required");
-  }
+  const stores = await Store.find(filter);
 
-  // Verify owner exists
-  const ownerUser = await User.findById(ownerId);
-  if (!ownerUser) {
-    throw new ApiError(404, "Owner user not found");
-  }
-
-  const store = await Store.create({
-    storeName: storeName.trim(),
-    owner: ownerId,
-    address: address?.trim(),
-    phone: phone?.trim(),
-  });
-
-  return res.status(201).json(
-    new ApiResponse(201, store, "Store created successfully")
+  return res.status(200).json(
+    new ApiResponse(200, stores, "My stores retrieved successfully")
   );
 });
 
-const getMyStore = asyncHandler(async (req, res) => {
-    const ownerId = req.user._id;
-
-    const store = await Store.findOne({ owner: ownerId });
-
-    if (!store) {
-        throw new ApiError(404, "Store not found");
-    }
-
-    return res.status(200).json(
-        new ApiResponse(200, store, "Store retrieved successfully")
-    );
-});
-
 const updateMyStore = asyncHandler(async (req, res) => {
+  const { storeId } = req.params;
   const { storeName, address, phone } = req.body;
 
-  const store = await Store.findOne({ owner: req.user._id });
+  const store = await Store.findOne({
+    _id: storeId,
+    owner: req.user._id
+  });
 
   if (!store) {
-    throw new ApiError(404, "Store not found for this user");
+    throw new ApiError(404, "Store not found or unauthorized");
   }
 
   if (storeName) store.storeName = storeName.trim();
@@ -68,42 +46,64 @@ const updateMyStore = asyncHandler(async (req, res) => {
   );
 });
 
-const updateStoreByAdmin = asyncHandler(async (req, res) => {
-  const { storeId } = req.params;
-  const { storeName, address, phone } = req.body;
+// ADMIN FUNCTION
+const getAllStores = asyncHandler(async (req, res) => {
+  const stores = await Store.find().populate("owner", "username email");
 
-  const store = await Store.findById(storeId);
+  return res.status(200).json(
+    new ApiResponse(200, stores, "All stores retrieved successfully")
+  );
+});
+
+const getPendingStores = asyncHandler(async (req, res) => {
+  const stores = await Store.find({ status: "pending" })
+    .populate("owner", "username email");
+
+  return res.status(200).json(
+    new ApiResponse(200, stores, "Pending store requests")
+  );
+});
+
+const approveStore = asyncHandler(async (req, res) => {
+  const store = await Store.findById(req.params.storeId);
+
   if (!store) {
     throw new ApiError(404, "Store not found");
   }
 
-  if (storeName) store.storeName = storeName.trim();
-  if (address) store.address = address.trim();
-  if (phone) store.phone = phone.trim();
+  store.status = "approved";
+  store.isActive = true;
 
   await store.save();
 
   return res.status(200).json(
-    new ApiResponse(200, store, "Store updated successfully")
+    new ApiResponse(200, store, "Store approved successfully")
   );
 });
 
-const getAllStores = asyncHandler(async (req, res) => {
-    const stores = await Store.find();
+const rejectStore = asyncHandler(async (req, res) => {
+  const store = await Store.findById(req.params.storeId);
 
-    if (stores.length === 0) {
-        throw new ApiError(404, "No stores found");
-    }
+  if (!store) {
+    throw new ApiError(404, "Store not found");
+  }
 
-    return res.status(200).json(
-        new ApiResponse(200, stores, "Stores retrieved successfully")
-    );
+  store.status = "rejected";
+  store.isActive = false;
+
+  await store.save();
+
+  return res.status(200).json(
+    new ApiResponse(200, store, "Store rejected")
+  );
 });
 
+
 export {
-    createStore,
-    getMyStore,
+    getMyStores,
     updateMyStore,
-    updateStoreByAdmin,
-    getAllStores
+    getAllStores,
+    getPendingStores,
+    approveStore,
+    rejectStore
 };

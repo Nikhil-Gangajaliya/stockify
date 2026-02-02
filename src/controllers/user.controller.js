@@ -1,6 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
+import { Store } from "../models/store.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 
@@ -23,15 +24,18 @@ const generateAccessAndRefreshToken = async (userId) => {
 }
 
 const registerUser = asyncHandler(async (req, res) => {
-    const { email, username, password } = req.body;
+    const { email, username, password, storeName, address, phone } = req.body;
 
+    // 1️⃣ Validate fields
     if (
-        [email, username, password].some((fields) =>
-            fields?.trim() === "")
+        [email, username, password, storeName, address, phone].some(
+            (field) => !field || field.trim() === ""
+        )
     ) {
         throw new ApiError(400, "All fields are required");
     }
 
+    // 2️⃣ Check existing user
     const existedUser = await User.findOne({
         $or: [{ username }, { email }]
     });
@@ -40,25 +44,42 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new ApiError(409, "User with username or email already exists");
     }
 
+    // 3️⃣ Create user
     const user = await User.create({
         email,
         username: username.toLowerCase(),
         password
-    })
+    });
 
-    const createdUser = await User.findById(user._id).select(
-        "-password -refreshToken"
-    );
+    // 4️⃣ Create store for this user
+    const store = await Store.create({
+        storeName,
+        owner: user._id,
+        address,
+        phone
+    });
+
+    // 5️⃣ Link store to user (VERY IMPORTANT)
+    user.store = store._id;
+    await user.save();
+
+    // 6️⃣ Return safe response
+    const createdUser = await User.findById(user._id)
+        .select("-password -refreshToken")
+        .populate("store");
 
     if (!createdUser) {
         throw new ApiError(500, "Something went wrong while registering the user");
     }
 
     return res.status(201).json(
-        new ApiResponse(200, createdUser, "User registered successfully")
-    )
-
-})
+        new ApiResponse(
+            201,
+            createdUser,
+            "User registered and store created successfully"
+        )
+    );
+});
 
 const loginUser = asyncHandler(async (req, res) => {
 
@@ -88,8 +109,11 @@ const loginUser = asyncHandler(async (req, res) => {
 
     const options = {
         httpOnly: true,
-        secure: true
-    }
+        secure: false,   
+        sameSite: "lax"
+    };
+
+
 
     return res
         .status(200)
@@ -208,16 +232,22 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
 })
 
 const getCurrentUser = asyncHandler(async (req, res) => {
-    return res
-        .status(200)
-        .json(
-            new ApiResponse(
-                200,
-                req.user,
-                "Current user fetched successfully"
-            )
-        )
-})
+  const user = await User.findById(req.user._id)
+    .select("-password -refreshToken")
+    .populate("store");
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      user,
+      "Current user fetched successfully"
+    )
+  );
+});
 
 const getAllUsers = asyncHandler(async (req, res) => {
     const users = await User.find().select("-password -refreshToken");
