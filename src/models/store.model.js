@@ -22,6 +22,17 @@ const storeSchema = new Schema(
 
         phone: {
             type: String
+        },
+
+        status: {
+            type: String,
+            enum: ["pending", "approved", "rejected"],
+            default: "pending"
+        },
+
+        isActive: {
+            type: Boolean,
+            default: false
         }
     },
     {
