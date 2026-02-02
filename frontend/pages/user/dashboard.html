@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>User Dashboard</title>
+</head>
+<body>
+
+<h1>User Dashboard</h1>
+<div id="profile"></div>
+<div id="dashboardStats"></div>
+<div id="recentOrders"></div>
+<div id="orderStats"></div>
+    
+<script src="../../js/core/config.js"></script>
+<script src="../../js/core/api.js"></script>
+<script src="../../js/core/guard.js"></script>
+<script src="../../js/user/dashboard.js"></script>
+
+<script>
+requireAuth("user");
+loadDashboard();
+</script>
+
+</body>
+</html>
