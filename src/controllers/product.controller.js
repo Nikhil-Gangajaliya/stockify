@@ -4,7 +4,7 @@ import { Product } from "../models/product.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 
 const createProduct = asyncHandler(async (req, res) => {
-  const { name, description, price, stock } = req.body;
+  const { name, price, stock } = req.body;
 
   if (!name || name.trim() === "") {
     throw new ApiError(400, "Product name is required");
@@ -20,7 +20,6 @@ const createProduct = asyncHandler(async (req, res) => {
 
   const product = await Product.create({
     name: name.trim(),
-    description: description?.trim(),
     price: Number(price),
     stock: Number(stock)
   });

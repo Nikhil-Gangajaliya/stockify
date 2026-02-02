@@ -10,15 +10,18 @@
 <div id="dashboardStats"></div>
 <div id="recentOrders"></div>
 <div id="orderStats"></div>
+<div id="sidebar"></div>
     
 <script src="../../js/core/config.js"></script>
 <script src="../../js/core/api.js"></script>
 <script src="../../js/core/guard.js"></script>
 <script src="../../js/user/dashboard.js"></script>
+<script src="../../js/core/layout.js"></script>
 
 <script>
 requireAuth("user");
 loadDashboard();
+loadUserSidebar();
 </script>
 
 </body>
