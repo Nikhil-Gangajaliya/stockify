@@ -7,7 +7,7 @@ async function loadProducts() {
     randerGetAllProducts(res.data);
   } catch (err) {
     console.error(err);
-    alert(err.message);
+    // alert(err.message);
   }
 }
 
@@ -83,16 +83,11 @@ function randerGetAllProducts(data) {
 function changeQty(id, delta) {
   const el = document.getElementById(`qty-${id}`);
   let qty = parseInt(el.innerText);
+
   qty = Math.max(1, qty + delta);
   el.innerText = qty;
-  const addBtn = document.getElementById(`addBtn-${productId}`);
-  if (product.stock <= 0) {
-    addBtn.disabled = true;
-  } else {
-    addBtn.disabled = false;
-  }
-
 }
+
 
 function handleAdd(product) {
   const qty = parseInt(

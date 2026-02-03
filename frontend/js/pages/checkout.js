@@ -25,7 +25,7 @@ function closeCheckout() {
 async function confirmOrder() {
   try {
     const payload = {
-      items: getCart().map(i => ({
+      products: getCart().map(i => ({
         productId: i.productId,
         quantity: i.quantity
       }))
@@ -35,8 +35,10 @@ async function confirmOrder() {
 
     alert("Order placed successfully!");
     clearCart();
+    updatePlaceOrderButton();
     closeCheckout();
   } catch (err) {
     alert(err.message);
   }
 }
+
