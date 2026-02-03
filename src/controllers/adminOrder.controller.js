@@ -64,39 +64,39 @@ const rejectOrder = asyncHandler(async (req, res) => {
     );
 });
 
-const deliverOrder = asyncHandler(async (req, res) => {
-  const { orderId } = req.params;
+// const deliverOrder = asyncHandler(async (req, res) => {
+//   const { orderId } = req.params;
 
-  const order = await Order.findById(orderId);
-  if (!order) throw new ApiError(404, "Order not found");
+//   const order = await Order.findById(orderId);
+//   if (!order) throw new ApiError(404, "Order not found");
 
-  if (order.status !== "approved") {
-    throw new ApiError(400, "Only approved orders can be delivered");
-  }
+//   if (order.status !== "approved") {
+//     throw new ApiError(400, "Only approved orders can be delivered");
+//   }
 
-  for (const item of order.items) {
-    await StoreInventory.findOneAndUpdate(
-      {
-        store: order.store,
-        product: item.product,
-      },
-      {
-        $inc: { stock: item.quantity },
-      },
-      {
-        upsert: true,
-        new: true,
-      }
-    );
-  }
+//   for (const item of order.items) {
+//     await StoreInventory.findOneAndUpdate(
+//       {
+//         store: order.store,
+//         product: item.product,
+//       },
+//       {
+//         $inc: { stock: item.quantity },
+//       },
+//       {
+//         upsert: true,
+//         new: true,
+//       }
+//     );
+//   }
 
-  order.status = "delivered";
-  await order.save();
+//   order.status = "delivered";
+//   await order.save();
 
-  return res.status(200).json(
-    new ApiResponse(200, order, "Order delivered & inventory updated")
-  );
-});
+//   return res.status(200).json(
+//     new ApiResponse(200, order, "Order delivered & inventory updated")
+//   );
+// });
 
 
 const adminCancelOrder = asyncHandler(async (req, res) => {
@@ -107,7 +107,7 @@ const adminCancelOrder = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Order not found");
   }
 
-  if (["delivered", "cancelled"].includes(order.status)) {
+  if (["cancelled"].includes(order.status)) {
     throw new ApiError(400, "Order cannot be cancelled");
   }
 
@@ -131,6 +131,6 @@ export {
     getPendingOrders,
     approveOrder,
     rejectOrder,
-    deliverOrder,
+    // deliverOrder,
     adminCancelOrder
 };
