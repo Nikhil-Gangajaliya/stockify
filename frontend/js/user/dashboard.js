@@ -51,7 +51,25 @@ function renderUserDashboard(data) {
 }
 
 function renderRecentOrders(data) {
-    let html = `
+  if (!Array.isArray(data) || data.length === 0) {
+    document.getElementById("recentOrders").innerHTML =
+      "<p>No recent orders</p>";
+    return;
+  }
+
+  // ✅ filter cancelled orders
+  const recentOrders = data.filter(
+    order => order.status !== "cancelled",
+    order => order.status !== "rejected"
+  );
+
+  if (recentOrders.length === 0) {
+    document.getElementById("recentOrders").innerHTML =
+      "<p>No recent orders</p>";
+    return;
+  }
+
+  let html = `
     <h3>Recent Orders</h3>
     <table border="1" width="100%">
       <tr>
@@ -63,9 +81,9 @@ function renderRecentOrders(data) {
       </tr>
   `;
 
-    data.forEach(order => {
-        order.items.forEach(item => {
-            html += `
+  recentOrders.forEach(order => {
+    order.items.forEach(item => {
+      html += `
         <tr>
           <td>${item.product?.name || "Deleted Product"}</td>
           <td>${item.quantity}</td>
@@ -74,12 +92,13 @@ function renderRecentOrders(data) {
           <td>${new Date(order.createdAt).toLocaleString()}</td>
         </tr>
       `;
-        });
     });
+  });
 
-    html += `</table>`;
-    document.getElementById("recentOrders").innerHTML = html;
+  html += `</table>`;
+  document.getElementById("recentOrders").innerHTML = html;
 }
+
 
 function renderOrderStatusSummary(data) {
     let html = `<h3>Orders</h3><ul>`;
