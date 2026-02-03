@@ -1,37 +1,53 @@
-import mongoose from "mongoose";
 import dotenv from "dotenv";
-import bcrypt from "bcryptjs";
+dotenv.config();
 import { User } from "../models/user.model.js";
 import connectDB from "../db/connectDB.js";
 
-dotenv.config();
-
-const createAdmin = async () => {
+const setupAdminComplete = async () => {
   try {
     await connectDB();
 
     const email = "nikhilgajjar810@gmail.com";
 
-    const adminExists = await User.findOne({ email });
+    const admin = await User.findOne({ email, role: "admin" });
 
-    if (adminExists) {
-      console.log("Admin already exists");
+    if (!admin) {
+      console.log("Admin not found");
       process.exit(0);
     }
 
-    await User.create({
-      username: "Stockify Admin",
-      email,
-      password: "Admin@12345",
-      role: "admin",
-    });
+    // 🔒 Hard validation (real-world)
+    if (admin.gstNumber) {
+      console.log("Admin already fully configured");
+      process.exit(0);
+    }
 
-    console.log("Admin created successfully");
+    admin.username = "Stockify Pvt Ltd";
+
+    admin.contact = {
+      phone: "9876543210",
+      alternatePhone: "9123456789"
+    };
+
+    admin.address = {
+      line1: "Shop No. 12, Business Plaza",
+      line2: "Kalawad Road",
+      city: "Rajkot",
+      state: "Gujarat",
+      pincode: "360005",
+      country: "India"
+    };
+
+    admin.gstNumber = "24ABCDE1234F1Z5";
+
+    await admin.save();
+
+    console.log("Admin FULL details configured successfully");
     process.exit(0);
   } catch (error) {
-    console.error("Admin creation failed", error);
+    console.error("Admin setup failed", error);
     process.exit(1);
   }
 };
 
-createAdmin();
+setupAdminComplete();

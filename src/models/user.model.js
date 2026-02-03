@@ -3,41 +3,73 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 
 const userSchema = new Schema(
-    {
-        username: {
-            type: String,
-            required: true,
-            trim: true
-        },
-        email: {
-            type: String,
-            required: true,
-            unique: true,
-            lowercase: true,
-            trim: true
-        },
-        role: {
-            type: String,
-            enum: ["user", "admin"],
-            default: "user"
-        },
-        password: {
-            type: String,
-            required: true
-        },
-        store: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Store"
-        },
-        isActive: {
-            type: Boolean,
-            default: true,
-        }
+  {
+    username: {
+      type: String,
+      required: true,
+      trim: true,
+      required: true
     },
-    {
-        timestamps: true
+
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+      required: true
+    },
+
+    password: {
+      type: String,
+      required: true,
+      required: true
+    },
+
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user"
+    },
+
+    // 🔹 For store owners / admins
+    store: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Store"
+    },
+
+    // 🔹 For invoices (buyers)
+    contact: {
+      phone: String,
+      alternatePhone: String
+    },
+
+    address: {
+      line1: String,
+      line2: String,
+      city: String,
+      state: String,
+      pincode: String,
+      country: {
+        type: String,
+        default: "India"
+      }
+    },
+
+    gstNumber: {
+      type: String // optional, only if B2B
+    },
+
+    isActive: {
+      type: Boolean,
+      default: true
     }
+  },
+  {
+    timestamps: true
+  }
 );
+
 
 userSchema.pre("save", async function () {
     if (!this.isModified("password")) return;
