@@ -74,6 +74,7 @@ const getInvoiceDetails = asyncHandler(async (req, res) => {
     // ✅ SELLER → LOGGED-IN ADMIN
     seller: {
       storeName: admin.store.storeName,
+      gstNumber: admin.store.gstNumber,
       email: admin.email,
       address: admin.address,
       contact: admin.contact
