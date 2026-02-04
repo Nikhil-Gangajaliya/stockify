@@ -26,8 +26,9 @@ const storeSchema = new Schema(
 
         gstNumber: {
             type: String,
-            required: true,   // 🔥 important
-            uppercase: true
+            uppercase: true,
+            trim: true,
+            default: null   // ✅ optional at DB level
         },
 
         status: {
