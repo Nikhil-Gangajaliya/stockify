@@ -9,39 +9,36 @@ import { User } from "../models/user.model.js";
 const generateInvoice = asyncHandler(async (req, res) => {
   const { orderId } = req.params;
 
-  // ✅ only admin can generate invoice
   if (req.user.role !== "admin") {
     throw new ApiError(403, "Only admin can generate invoice");
   }
 
-  // ✅ order is source of truth
   const order = await Order.findById(orderId);
   if (!order) {
     throw new ApiError(404, "Order not found");
   }
 
-  // ✅ avoid duplicate invoice
-  const existingInvoice = await Invoice.findOne({ order: orderId });
-  if (existingInvoice) {
-    throw new ApiError(400, "Invoice already exists for this order");
+  const exists = await Invoice.findOne({ order: orderId });
+  if (exists) {
+    throw new ApiError(400, "Invoice already exists");
   }
 
-  // ✅ create minimal invoice
   const invoice = await Invoice.create({
     order: orderId,
-    invoiceNumber: `INV-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    generatedBy: req.user._id, // ✅ SELLER SOURCE
+    invoiceNumber: `INV-${Date.now()}`,
     amount: order.totalAmount
   });
 
   return res.status(201).json(
-    new ApiResponse(201, invoice, "Invoice generated successfully")
+    new ApiResponse(201, invoice, "Invoice generated")
   );
 });
+
 
 const getInvoiceDetails = asyncHandler(async (req, res) => {
   const { invoiceId } = req.params;
 
-  // 1️⃣ Fetch invoice + order + buyer + buyer store
   const invoice = await Invoice.findById(invoiceId)
     .populate({
       path: "order",
@@ -49,79 +46,84 @@ const getInvoiceDetails = asyncHandler(async (req, res) => {
         { path: "user", populate: "store" },
         { path: "items.product" }
       ]
+    })
+    .populate({
+      path: "generatedBy",
+      populate: "store"
     });
 
   if (!invoice) {
     throw new ApiError(404, "Invoice not found");
   }
 
-  const { order } = invoice;
-
-  // 2️⃣ SELLER = CURRENT LOGGED-IN ADMIN
-  const admin = await User.findById(req.user._id).populate("store");
-  if (!admin || !admin.store) {
-    throw new ApiError(400, "Seller store not configured");
-  }
-
-  // 3️⃣ BUYER = ORDER USER
+  const order = invoice.order;
+  const seller = invoice.generatedBy; // 🔥 FIXED
   const buyer = order.user;
 
-  const response = {
-    invoiceNumber: invoice.invoiceNumber,
-    invoiceDate: invoice.createdAt,
-    amount: invoice.amount,
-
-    // ✅ SELLER → LOGGED-IN ADMIN
-    seller: {
-      storeName: admin.store.storeName,
-      gstNumber: admin.store.gstNumber,
-      email: admin.email,
-      address: admin.address,
-      contact: admin.contact
-    },
-
-    // ✅ BUYER → ORDER.USER + ORDER.USER.STORE
-    buyer: {
-      storeName: buyer.store.storeName,
-      email: buyer.email,
-      address: buyer.address,
-      contact: buyer.contact
-    },
-
-    // ✅ PRODUCTS → ORDER.ITEMS
-    items: order.items.map(item => ({
-      product: item.product.name,
-      quantity: item.quantity,
-      price: item.price,
-      total: item.quantity * item.price
-    }))
-  };
-
   return res.status(200).json(
-    new ApiResponse(200, response, "Invoice details fetched")
+    new ApiResponse(200, {
+      invoiceNumber: invoice.invoiceNumber,
+      invoiceDate: invoice.createdAt,
+      amount: invoice.amount,
+
+      seller: {
+        storeName: seller.store.storeName,
+        gstNumber: seller.store.gstNumber,
+        email: seller.email,
+        address: seller.address,
+        contact: seller.contact
+      },
+
+      buyer: {
+        storeName: buyer.store.storeName,
+        email: buyer.email,
+        address: buyer.address,
+        contact: buyer.contact
+      },
+
+      items: order.items.map(item => ({
+        product: item.product.name,
+        quantity: item.quantity,
+        price: item.price,
+        total: item.quantity * item.price
+      }))
+    })
   );
 });
 
 
-const getInvoiceByOrder = asyncHandler(async (req, res) => {
-  const { orderId } = req.params;
+const getMyInvoices = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
 
-  const invoice = await Invoice.findOne({ order: orderId })
-    .populate("order");
+  // 1️⃣ Find user's orders
+  const orders = await Order.find({ user: userId }).select("_id");
 
-  if (!invoice) {
-    throw new ApiError(404, "Invoice not found");
+  if (!orders.length) {
+    return res.status(200).json(
+      new ApiResponse(200, [], "No invoices found")
+    );
   }
 
-  const isAdmin = req.user.role === "admin";
-  const isOwner = invoice.order.user.toString() === req.user._id.toString();
+  const orderIds = orders.map(o => o._id);
 
-  if (!isAdmin && !isOwner) {
-    throw new ApiError(403, "Not authorized to view this invoice");
-  }
+  // 2️⃣ Find invoices for those orders
+  const invoices = await Invoice.find({ order: { $in: orderIds } })
+    .sort({ createdAt: -1 })
+    .select("_id invoiceNumber amount createdAt");
 
   return res.status(200).json(
-    new ApiResponse(200, invoice, "Invoice retrieved successfully")
+    new ApiResponse(200, invoices, "User invoices fetched successfully")
+  );
+});
+
+
+const getAllInvoices = asyncHandler(async (req, res) => {
+  const invoices = await Invoice.find({})
+    .sort({ createdAt: -1 })
+    .select("_id invoiceNumber amount createdAt");
+
+  return res.status(200).json(
+    new ApiResponse(200, invoices, "All invoices fetched successfully")
   );
 });
 
@@ -151,6 +153,7 @@ const getInvoicesByStore = asyncHandler(async (req, res) => {
 export {
   generateInvoice,
   getInvoiceDetails,
-  getInvoiceByOrder,
+  getMyInvoices,
+  getAllInvoices,
   getInvoicesByStore
 };

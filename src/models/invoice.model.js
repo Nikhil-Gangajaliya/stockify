@@ -8,6 +8,12 @@ const invoiceSchema = new Schema(
       required: true,
     },
 
+    generatedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true   // 👈 ADMIN
+    },
+
     invoiceNumber: {
       type: String,
       required: true,
