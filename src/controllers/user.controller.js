@@ -24,11 +24,11 @@ const generateAccessAndRefreshToken = async (userId) => {
 }
 
 const registerUser = asyncHandler(async (req, res) => {
-    const { email, username, password, storeName, address, phone } = req.body;
+    const { email, username, password, storeName, address, contact } = req.body;
 
     // 1️⃣ Validate fields
     if (
-        [email, username, password, storeName, address, phone].some(
+        [email, username, password, storeName, address, contact].some(
             (field) => !field || field.trim() === ""
         )
     ) {

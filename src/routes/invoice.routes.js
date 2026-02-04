@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
     generateInvoice,
+    getInvoiceDetails,
     getInvoiceByOrder,
     getInvoicesByStore
 } from "../controllers/invoice.controller.js";
@@ -10,6 +11,7 @@ import { authorizeRoles } from "../middlewares/role.middleware.js";
 const router = Router();
 
 router.route("/generate-invoice/:orderId").post(verifyJWT, authorizeRoles("admin"), generateInvoice);
+router.route("/invoice-details/:invoiceId").get(verifyJWT, authorizeRoles("admin", "user"), getInvoiceDetails);
 router.route("/invoice-by-order/:orderId").get(verifyJWT, authorizeRoles("admin", "user"), getInvoiceByOrder);
 router.route("/invoices-by-store/:storeId").get(verifyJWT, authorizeRoles("admin"), getInvoicesByStore);
 
