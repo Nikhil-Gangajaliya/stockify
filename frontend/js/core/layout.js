@@ -6,3 +6,12 @@ function loadUserSidebar() {
     })
     .catch(err => console.error("Sidebar load failed", err));
 }
+
+function loadAdminSidebar() {
+  fetch("../../components/sidebar-admin.html")
+    .then(res => res.text())
+    .then(html => {
+      document.getElementById("adminSidebar").innerHTML = html;
+    })
+    .catch(err => console.error("Sidebar load failed", err));
+}
