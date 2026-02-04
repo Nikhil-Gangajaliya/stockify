@@ -6,92 +6,34 @@ import { Invoice } from "../models/invoice.model.js";
 import { Order } from "../models/order.model.js";
 
 const generateInvoice = asyncHandler(async (req, res) => {
-  const { orderId } = req.params;
+    const { orderId } = req.params;
 
-  const order = await Order.findById(orderId)
-    .populate("items.product")
-    .populate("user");
+    const order = await Order.findById(orderId);
+    if (!order) {
+        throw new ApiError(404, "Order not found");
+    }
 
-  if (!order) {
-    throw new ApiError(404, "Order not found");
-  }
+    if (order.status !== "approved") {
+        throw new ApiError(400, "Invoice can only be generated for approved orders");
+    }
 
-  if (order.status !== "approved") {
-    throw new ApiError(400, "Invoice can only be generated for approved orders");
-  }
+    const existingInvoice = await Invoice.findOne({ order: orderId });
+    if (existingInvoice) {
+        throw new ApiError(400, "Invoice already exists for this order");
+    }
 
-  const existingInvoice = await Invoice.findOne({ order: orderId });
-  if (existingInvoice) {
-    throw new ApiError(400, "Invoice already exists for this order");
-  }
+    const invoiceNumber = `INV-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
-  const store = await Store.findById(order.store);
-  if (!store) {
-    throw new ApiError(404, "Store not found");
-  }
+    const invoice = await Invoice.create({
+        order: orderId,
+        invoiceNumber,
+        amount: order.totalAmount
+    });
 
-  let subtotal = 0;
-  let totalTax = 0;
-
-  const items = order.items.map(item => {
-    const lineBase = item.quantity * item.price;
-    const taxRate = 18; // example GST
-    const taxAmount = (lineBase * taxRate) / 100;
-    const lineTotal = lineBase + taxAmount;
-
-    subtotal += lineBase;
-    totalTax += taxAmount;
-
-    return {
-      product: item.product._id,
-      productCode: item.product._id.toString().slice(-6),
-      description: item.product.name,
-      quantity: item.quantity,
-      unitPrice: item.price,
-      discount: 0,
-      taxRate,
-      lineTotal
-    };
-  });
-
-  const invoiceNumber = `INV-${Date.now()}`;
-
-  const invoice = await Invoice.create({
-    invoiceNumber,
-    order: orderId,
-
-    seller: {
-      companyName: store.name,
-      address: store.address,
-      contact: store.contact,
-      gstNumber: store.gstNumber
-    },
-
-    buyer: {
-      name: order.user.name,
-      address: order.user.address,
-      contact: order.user.email
-    },
-
-    items,
-
-    summary: {
-      subtotal,
-      totalDiscount: 0,
-      totalTax,
-      shippingCharges: 0,
-      grandTotal: subtotal + totalTax
-    },
-
-    paymentMethod: "UPI / Bank Transfer",
-    notes: "Thank you for your business"
-  });
-
-  return res.status(201).json(
-    new ApiResponse(201, invoice, "Invoice generated successfully")
-  );
+    return res.status(201).json(
+        new ApiResponse(201, invoice, "Invoice generated successfully")
+    );
 });
-
 
 const getInvoiceByOrder = asyncHandler(async (req, res) => {
   const { orderId } = req.params;

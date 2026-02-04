@@ -40,24 +40,13 @@ const userSchema = new Schema(
 
     // 🔹 For invoices (buyers)
     contact: {
-      phone: String,
-      alternatePhone: String
+      type: String,
+      required: true
     },
 
     address: {
-      line1: String,
-      line2: String,
-      city: String,
-      state: String,
-      pincode: String,
-      country: {
-        type: String,
-        default: "India"
-      }
-    },
-
-    gstNumber: {
-      type: String // optional, only if B2B
+      type: String,
+      required: true
     },
 
     isActive: {
