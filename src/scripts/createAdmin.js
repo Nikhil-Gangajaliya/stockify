@@ -1,53 +1,41 @@
 import dotenv from "dotenv";
 dotenv.config();
-import { User } from "../models/user.model.js";
+
 import connectDB from "../db/connectDB.js";
+import { User } from "../models/user.model.js";
+import { Store } from "../models/store.model.js";
 
-const setupAdminComplete = async () => {
-  try {
-    await connectDB();
+const createAdminStore = async () => {
+  await connectDB();
 
-    const email = "nikhilgajjar810@gmail.com";
-
-    const admin = await User.findOne({ email, role: "admin" });
-
-    if (!admin) {
-      console.log("Admin not found");
-      process.exit(0);
-    }
-
-    // 🔒 Hard validation (real-world)
-    if (admin.gstNumber) {
-      console.log("Admin already fully configured");
-      process.exit(0);
-    }
-
-    admin.username = "Stockify Pvt Ltd";
-
-    admin.contact = {
-      phone: "9876543210",
-      alternatePhone: "9123456789"
-    };
-
-    admin.address = {
-      line1: "Shop No. 12, Business Plaza",
-      line2: "Kalawad Road",
-      city: "Rajkot",
-      state: "Gujarat",
-      pincode: "360005",
-      country: "India"
-    };
-
-    admin.gstNumber = "24ABCDE1234F1Z5";
-
-    await admin.save();
-
-    console.log("Admin FULL details configured successfully");
-    process.exit(0);
-  } catch (error) {
-    console.error("Admin setup failed", error);
+  const admin = await User.findOne({ role: "admin" });
+  if (!admin) {
+    console.log("Admin not found");
     process.exit(1);
   }
+
+  if (admin.store) {
+    console.log("Admin store already exists");
+    process.exit(0);
+  }
+
+  const store = await Store.create({
+    storeName: "Stockify Pvt Ltd",
+    owner: admin._id,
+    address: {
+      line1: "Shop No. 12, Business Plaza",
+      city: "Rajkot",
+      state: "Gujarat",
+      country: "India"
+    },
+    phone: "9876543210"
+  });
+
+  admin.store = store._id;
+  await admin.save();
+
+  console.log("Admin store created successfully");
+  process.exit(0);
 };
 
-setupAdminComplete();
+createAdminStore();
