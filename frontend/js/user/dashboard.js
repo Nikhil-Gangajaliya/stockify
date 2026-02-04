@@ -32,7 +32,7 @@ function randerGetCurrentUser(data) {
       <li>Email: <b>${data.email}</b></li>
       <li>Role: <b>${data.role}</b></li>
       <li>Store: <b>${store.storeName || "-"}</b></li>
-      <li>Phone: <b>${store.phone || "-"}</b></li>
+      <li>Contact: <b>${data.contact || "-"}</b></li>
       <li>Address: <b>${store.address || "-"}</b></li>
       <li>Joined On: <b>${new Date(data.createdAt).toLocaleDateString()}</b></li>
     </ul>
