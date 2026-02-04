@@ -24,6 +24,12 @@ const storeSchema = new Schema(
             type: String
         },
 
+        gstNumber: {
+            type: String,
+            required: true,   // 🔥 important
+            uppercase: true
+        },
+
         status: {
             type: String,
             enum: ["pending", "approved", "rejected"],
