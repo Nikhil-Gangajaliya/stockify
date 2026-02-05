@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Products</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        table {
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 8px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background: #fff;
+            width: 400px;
+            margin: 80px auto;
+            padding: 15px;
+            border-radius: 4px;
+        }
+
+        .close {
+            float: right;
+            cursor: pointer;
+            font-size: 18px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h2>Products</h2>
+
+    <button onclick="openCreateModal()">+ Add Product</button>
+
+    <br><br>
+
+    <div id="productList"></div>
+    <div id="adminSidebar"></div>
+
+    <!-- CREATE / EDIT MODAL -->
+    <div id="productModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">✖</span>
+
+            <h3 id="modalTitle">Create Product</h3>
+
+            <input type="hidden" id="productId" />
+
+            <label>Name</label><br>
+            <input type="text" id="name"><br><br>
+
+            <label>Price</label><br>
+            <input type="number" id="price"><br><br>
+
+            <label>Stock</label><br>
+            <input type="number" id="stock"><br><br>
+
+            <button onclick="submitProduct()">Save</button>
+        </div>
+    </div>
+
+    <!-- VIEW MODAL -->
+    <div id="viewModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeViewModal()">✖</span>
+            <h3>Product Details</h3>
+            <div id="viewContent"></div>
+
+            <br>
+            <button onclick="editFromView()">Edit</button>
+            <button onclick="deleteFromView()">Delete</button>
+        </div>
+    </div>
+
+    <!-- CORE -->
+    <script src="../../js/core/config.js"></script>
+    <script src="../../js/core/api.js"></script>
+    <script src="../../js/core/cart.js"></script>
+    <script src="../../js/core/layout.js"></script>
+
+    <!-- PAGE -->
+    <script src="../../js/admin/products.js"></script>
+
+    <script>
+        loadProducts();
+        loadAdminSidebar();
+    </script>
+
+</body>
+
+</html>

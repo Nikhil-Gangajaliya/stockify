@@ -13,16 +13,18 @@
   <div id="salesStats"></div>
   <div id="productStats"></div>
   <div id="profile"></div>
+  <div id="adminSidebar"></div>
 
   <script src="../../js/core/config.js"></script>
   <script src="../../js/core/api.js"></script>
   <script src="../../js/core/guard.js"></script>
   <script src="../../js/admin/dashboard.js"></script>
+  <script src="../../js/core/layout.js"></script>
 
   <script>
     requireAuth("admin");
     loadDashboard();
-    profileDetails();
+    loadAdminSidebar();
   </script>
 
 </body>

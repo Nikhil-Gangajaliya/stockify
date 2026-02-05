@@ -1,17 +1,19 @@
 async function loadDashboard() {
   try {
     const [
+      currentUser,
       globalStats,
       storeStats,
       salesSummary,
       topProducts
     ] = await Promise.all([
+      apiRequest("/users/current-user"),
       apiRequest("/dashboard/global-stats"),
       apiRequest("/dashboard/store-stats"),
       apiRequest("/dashboard/sales-summary"),
       apiRequest("/dashboard/top-products")
     ]);
-
+    randerGetCurrentUser(currentUser.data);
     renderGlobalStats(globalStats.data);
     renderStoreStats(storeStats.data);
     renderSalesSummary(salesSummary.data);
@@ -20,6 +22,23 @@ async function loadDashboard() {
   } catch (err) {
     alert(err.message);
   }
+}
+
+function randerGetCurrentUser(data) {
+    const store = data.store || {};
+
+    document.getElementById("profile").innerHTML = `
+    <h3>User Profile</h3>
+    <ul>
+      <li>Name: <b>${data.username}</b></li>
+      <li>Email: <b>${data.email}</b></li>
+      <li>Role: <b>${data.role}</b></li>
+      <li>Store: <b>${store.storeName || "-"}</b></li>
+      <li>Contact: <b>${data.contact || "-"}</b></li>
+      <li>Address: <b>${store.address || "-"}</b></li>
+      <li>Joined On: <b>${new Date(data.createdAt).toLocaleDateString()}</b></li>
+    </ul>
+  `;
 }
 
 function renderGlobalStats(data) {
@@ -95,25 +114,3 @@ function renderTopProducts(data) {
   document.getElementById("productStats").innerHTML = html;
 }
 
-async function profileDetails() {
-  try {
-    const getCurrentUser = await apiRequest("/users/current-user");
-
-    randerGetCurrentUser(getCurrentUser.data);
-  }
-  catch (err) {
-    alert(err.message);
-  }
-}
-
-function randerGetCurrentUser(data) {
-  document.getElementById("profile").innerHTML = `
-    <h3>User Profile</h3>
-    <ul>
-      <li>Name: <b>${data.username}</b></li>
-      <li>Email: <b>${data.email}</b></li>
-      <li>Role: <b>${data.role}</b></li>
-      <li>Joined On: <b>${new Date(data.createdAt).toLocaleDateString()}</b></li>
-    </ul>
-  `;
-}

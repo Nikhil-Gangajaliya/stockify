@@ -31,7 +31,7 @@ const createProduct = asyncHandler(async (req, res) => {
 
 const updateProduct = asyncHandler(async (req, res) => {
   const { productId } = req.params;
-  const { name, description, price } = req.body;
+  const { name, description, price, stock } = req.body;
 
   const product = await Product.findById(productId);
   if (!product) {
@@ -47,6 +47,14 @@ const updateProduct = asyncHandler(async (req, res) => {
       throw new ApiError(400, "Price must be positive");
     }
     updateData.price = Number(price);
+  }
+
+  // 🔥 THIS WAS MISSING
+  if (stock !== undefined) {
+    if (stock < 0) {
+      throw new ApiError(400, "Stock cannot be negative");
+    }
+    updateData.stock = Number(stock);
   }
 
   const updatedProduct = await Product.findByIdAndUpdate(
@@ -86,9 +94,9 @@ const getAllProducts = asyncHandler(async (req, res) => {
 
 
 
-export { 
-    createProduct,
-    updateProduct,
-    deleteProduct,
-    getAllProducts
+export {
+  createProduct,
+  updateProduct,
+  deleteProduct,
+  getAllProducts
 };
