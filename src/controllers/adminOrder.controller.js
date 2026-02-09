@@ -1,11 +1,9 @@
-import { User } from "../models/user.model.js";
 import { Product } from "../models/product.model.js";
-import { Store } from "../models/store.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { Order } from "../models/order.model.js";
-import { StoreInventory } from "../models/storeInventory.model.js";
+
 
 const getPendingOrders = asyncHandler(async (req, res) => {
     const orders = await Order.find({ status: "pending" })
